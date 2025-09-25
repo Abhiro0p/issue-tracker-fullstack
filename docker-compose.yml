@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./issues.db
+      - CORS_ORIGINS=["http://localhost:4200"]
+      - DEBUG=True
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    environment:
+      - API_URL=http://backend:8000
+    networks:
+      - app-network
+
+  database:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=issues_db
+      - POSTGRES_USER=issues_user
+      - POSTGRES_PASSWORD=issues_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  backend_data:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
